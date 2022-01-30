@@ -1,0 +1,106 @@
+﻿@page "/"
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+@implements IAsyncDisposable
+
+<button @onclick="Off" disabled="@(!IsConnected)">Отключить все</button>
+
+<button @onclick="On" disabled="@(!IsConnected)">Включить все</button>
+
+@if (networkCards != null && networkCards.Count != 0)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Название</th>
+                <th>Статус</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var card in networkCards)
+            {
+                <tr>
+                    <td>@card.Name</td>
+                    <td>
+                        @if (@card.Status == "OK")
+                        {
+                            <span>Работает</span>
+                        }
+                        else
+                        {
+                            <span>Не работает</span>
+                        }
+                    </td>
+                    <td>
+                        <button @onclick="() => WorkCard(2, card.Name)">Отключить</button>
+                        <button @onclick="() => WorkCard(3, card.Name)">Включить</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private HubConnection hubConnection;
+    private List<NetworkCardModel> networkCards;
+
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("/servicehub"))
+            .Build();
+
+        hubConnection.On<NetworkCardModel[]>("ReciveArrayData", (cards) =>
+        {
+            this.networkCards = cards.ToList();
+            StateHasChanged();
+        });
+
+        hubConnection.On<string>("ReceiveResult", (result) =>
+             JsRuntime.InvokeVoidAsync("alert", result)
+        );
+
+        hubConnection.On<NetworkCardModel>("ReceiveChangeStatus", (result) =>
+        {
+            for (int i = 0; i < networkCards.Count; i++)
+            {
+                if (result.Name == networkCards[i].Name)
+                {
+                    networkCards[i] = result;
+                    break;
+                }
+            }
+            StateHasChanged();
+        });
+
+        await hubConnection.StartAsync();
+
+        await hubConnection.SendAsync("GetNetworkCards");
+    }
+
+
+    async Task Off() =>
+        await hubConnection.SendAsync("WorkWithNetworkCard", 0, "");
+
+    async Task On() =>
+        await hubConnection.SendAsync("WorkWithNetworkCard", 1, "");
+
+    async Task WorkCard(int input, string name = "") =>    
+        await hubConnection.SendAsync("WorkWithNetworkCard", input, name);
+    
+
+    public bool IsConnected =>
+        hubConnection.State == HubConnectionState.Connected;
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+
+}

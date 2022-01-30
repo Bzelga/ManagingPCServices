@@ -1,0 +1,89 @@
+﻿@page "/service"
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+@implements IAsyncDisposable
+
+@if (services != null && services.Count != 0)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Название сервиса</th>
+                <th>Статус</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var service in services)
+            {
+                <tr>
+                    <td>@service.NameService</td>
+                    <td>@service.StatusService</td>
+                    <td>
+                        @if (service.StatusService == "Stopped")
+                        {
+                            <button @onclick="() => WorkService(1, service.NameService)">Старт</button>
+                            <button @onclick="() => WorkService(3, service.NameService)">Перезагрузка</button>
+                        }
+                        else
+                        {
+                            <button @onclick="() => WorkService(0, service.NameService)">Стоп</button>
+                            <button @onclick="() => WorkService(2, service.NameService)">Пауза</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private HubConnection hubConnection;
+    private List<ServiceAndStatusModel> services;
+
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("/servicehub"))
+            .Build();
+
+        hubConnection.On<ServiceAndStatusModel[]>("ReciveArrayData", (services) =>
+        {
+            this.services = services.ToList();
+            StateHasChanged();
+        });
+
+        hubConnection.On<string>("ReceiveResult", (result) =>
+             JsRuntime.InvokeVoidAsync("alert", result)
+        );
+
+        hubConnection.On<ServiceAndStatusModel>("ReceiveChangeStatus", (result) =>
+        {
+            for (int i = 0; i < services.Count; i++)
+            {
+                if (result.NameService == services[i].NameService)
+                {
+                    services[i] = result;
+                    break;
+                }
+            }
+            StateHasChanged();
+        });
+
+        await hubConnection.StartAsync();
+
+        await hubConnection.SendAsync("GetServices");
+    }
+
+    async Task WorkService(int input, string serviceName) =>
+        await hubConnection.SendAsync("WorkWithService", input, serviceName);
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+}

@@ -1,0 +1,74 @@
+﻿@page "/registry"
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+@implements IAsyncDisposable
+
+ @if (nameProgramms != null && nameProgramms.Count != 0)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Название программы</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var nameProgramm in nameProgramms)
+            {
+                <tr>
+                    <td>@nameProgramm</td>
+                    <td><button @onclick="() => WorkRegystry(nameProgramm)">Убрать</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private HubConnection hubConnection;
+    private List<string> nameProgramms;
+
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("/servicehub"))
+            .Build();
+
+        hubConnection.On<string[]>("ReciveArrayData", (programm) =>
+       {
+           nameProgramms = programm.ToList();
+           StateHasChanged();
+       });
+
+        hubConnection.On<string>("ReceiveResult", (result) =>
+             JsRuntime.InvokeVoidAsync("alert", result)
+        );
+
+        await hubConnection.StartAsync();
+
+        await hubConnection.SendAsync("GetRegistryAutorunProgramm");
+    }
+
+    async Task WorkRegystry(string name)
+    {
+        for (int i = 0; i < nameProgramms.Count; i++)
+        {
+            if (nameProgramms[i] == name)
+            {
+                nameProgramms.RemoveAt(i);
+            }
+        }
+
+        await hubConnection.SendAsync("WorkWithRegysty", name);
+        StateHasChanged();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+}

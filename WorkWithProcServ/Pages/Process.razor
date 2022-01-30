@@ -1,0 +1,110 @@
+﻿@page "/process"
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+@implements IAsyncDisposable
+
+@if (processes != null && processes.Count != 0)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Название процесса</th>
+                <th>Статус</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var process in processes)
+            {
+                <tr>
+                    <td>@process.IdProcess</td>
+                    <td>@process.NameProcess</td>
+                    <td>
+                        @if (@process.StatusProcess)
+                        {
+                            <span>Работает</span>
+                        }
+                        else
+                        {
+                            <span>Пауза</span>
+                        }
+                    </td>
+                    <td>
+                        <button @onclick="() => WorkProcess(0, process.IdProcess)">Убить</button>
+                        <button @onclick="() => WorkProcess(1, process.IdProcess)">Остановить</button>
+                        <button @onclick="() => WorkProcess(2, process.IdProcess)">Возабновить</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private HubConnection hubConnection;
+    private List<ProcessIdStatusModel> processes;
+    private ProcessIdStatusModel changeProcess;
+    private bool delElem = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("/servicehub"))
+            .Build();
+
+        hubConnection.On<ProcessIdStatusModel[]>("ReciveArrayData", (processes) =>
+        {
+            this.processes = processes.ToList();
+            StateHasChanged();
+        });
+
+        hubConnection.On<string>("ReceiveResult", (result) =>
+             JsRuntime.InvokeVoidAsync("alert", result)
+        );
+
+        hubConnection.On<ProcessIdStatusModel>("ReceiveChangeStatus", (result) =>
+        {
+            for(int i = 0; i < processes.Count; i++)
+            {
+                if(result.IdProcess == processes[i].IdProcess)
+                {
+                    if(delElem)
+                    {
+                        processes.RemoveAt(i);
+                    }
+                    else
+                    {
+                        processes[i] = result;
+                    }
+                    break;
+                }
+            }
+            StateHasChanged();
+        });
+
+        await hubConnection.StartAsync();
+
+        await hubConnection.SendAsync("GetProcess");
+    }
+
+    async Task WorkProcess(int input, int id)
+    {
+        if(input == 0)
+        {
+            delElem = true;
+        }
+
+        await hubConnection.SendAsync("WorkWithProcess", input, id);
+    }
+
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+}
