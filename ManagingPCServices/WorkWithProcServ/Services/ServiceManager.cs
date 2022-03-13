@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.SignalR;
-using ManagingPCServices.Hubs;
-using ManagingPCServices.Models;
+﻿using ManagingPCServices.Hubs;
+using ManagingPCServices.Services.Interfaces;
+using Microsoft.AspNetCore.SignalR;
 
 namespace ManagingPCServices.Services
 {
-    public class ServiceManager
+    public class ServiceManager : IServiceManager
     {
         private readonly WorkerNetworkCard _network;
         private readonly WorkerProcess _process;
@@ -52,7 +52,7 @@ namespace ManagingPCServices.Services
         {
             string answer = "";
 
-            switch(input)
+            switch (input)
             {
                 case 0:
                     answer = _commandLine.ExecuteCommandCMD(command);
