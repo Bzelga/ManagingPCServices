@@ -12,7 +12,7 @@ namespace ManagingPCServices.Services
             //UseShellExecute = true - чтобы показывать оболочку, где исполняет
             Process process = new Process();
             process.StartInfo.FileName = "cmd.exe";
-            process.StartInfo.Arguments = command;
+            process.StartInfo.Arguments = "/C " + command;
             process.StartInfo.RedirectStandardOutput = true;
             process.Start();
 

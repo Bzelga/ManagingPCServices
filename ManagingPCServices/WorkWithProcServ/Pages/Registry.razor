@@ -4,7 +4,7 @@
 
 @implements IAsyncDisposable
 
- @if (nameProgramms != null && nameProgramms.Count != 0)
+@if (nameProgramms != null && nameProgramms.Count != 0)
 {
     <table class="table">
         <thead>
@@ -35,19 +35,23 @@
             .WithUrl(NavigationManager.ToAbsoluteUri("/servicehub"))
             .Build();
 
-        hubConnection.On<string[]>("ReciveArrayData", (programm) =>
-       {
-           nameProgramms = programm.ToList();
-           StateHasChanged();
-       });
-
-        hubConnection.On<string>("ReceiveResult", (result) =>
-             JsRuntime.InvokeVoidAsync("alert", result)
-        );
+        hubConnection.On<ReceiveCommandPackage>("Result", (result) =>
+        {
+            switch (result.TypeCommand)
+            {
+                case 0:
+                    nameProgramms = result.ReturnProgrammInRegistry.ToList();
+                    break;
+                case 1:
+                    JsRuntime.InvokeVoidAsync("alert", result.ReturtAnswer);
+                    break;
+            }
+            StateHasChanged();
+        });
 
         await hubConnection.StartAsync();
 
-        await hubConnection.SendAsync("GetRegistryAutorunProgramm");
+        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 5, Args = "3" });
     }
 
     async Task WorkRegystry(string name)
@@ -60,7 +64,7 @@
             }
         }
 
-        await hubConnection.SendAsync("WorkWithRegysty", name);
+        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 4, Args = name });
         StateHasChanged();
     }
 

@@ -54,49 +54,49 @@
             .WithUrl(NavigationManager.ToAbsoluteUri("/servicehub"))
             .Build();
 
-        hubConnection.On<ProcessIdStatusModel[]>("ReciveArrayData", (processes) =>
-        {
-            this.processes = processes.ToList();
-            StateHasChanged();
-        });
-
-        hubConnection.On<string>("ReceiveResult", (result) =>
-             JsRuntime.InvokeVoidAsync("alert", result)
-        );
-
-        hubConnection.On<ProcessIdStatusModel>("ReceiveChangeStatus", (result) =>
-        {
-            for(int i = 0; i < processes.Count; i++)
-            {
-                if(result.IdProcess == processes[i].IdProcess)
-                {
-                    if(delElem)
-                    {
-                        processes.RemoveAt(i);
-                    }
-                    else
-                    {
-                        processes[i] = result;
-                    }
-                    break;
-                }
-            }
-            StateHasChanged();
-        });
+        hubConnection.On<ReceiveCommandPackage>("Result", (result) =>
+       {
+           switch (result.TypeCommand)
+           {
+               case 0:
+                   processes = result.ReturnProcess.ToList();
+                   break;
+               case 1:
+                   JsRuntime.InvokeVoidAsync("alert", result.ReturtAnswer);
+                   break;
+               case 2:
+                   for (int i = 0; i < processes.Count; i++)
+                   {
+                       if (result.ReturnProces.IdProcess == processes[i].IdProcess)
+                       {
+                           if (delElem)
+                           {
+                               processes.RemoveAt(i);
+                           }
+                           else
+                           {
+                               processes[i] = result.ReturnProces;
+                           }
+                           break;
+                       }
+                   }
+                   break;
+           }
+           StateHasChanged();
+       });
 
         await hubConnection.StartAsync();
 
-        await hubConnection.SendAsync("GetProcess");
+        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 5, Args = "2" });
     }
 
     async Task WorkProcess(int input, int id)
     {
-        if(input == 0)
+        if (input == 0)
         {
             delElem = true;
         }
-
-        await hubConnection.SendAsync("WorkWithProcess", input, id);
+        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 3, TypeAction = input, Args = Convert.ToString(id) });
     }
 
 

@@ -48,36 +48,37 @@
             .WithUrl(NavigationManager.ToAbsoluteUri("/servicehub"))
             .Build();
 
-        hubConnection.On<ServiceAndStatusModel[]>("ReciveArrayData", (services) =>
+        hubConnection.On<ReceiveCommandPackage>("Result", (result) =>
         {
-            this.services = services.ToList();
-            StateHasChanged();
-        });
-
-        hubConnection.On<string>("ReceiveResult", (result) =>
-             JsRuntime.InvokeVoidAsync("alert", result)
-        );
-
-        hubConnection.On<ServiceAndStatusModel>("ReceiveChangeStatus", (result) =>
-        {
-            for (int i = 0; i < services.Count; i++)
+            switch (result.TypeCommand)
             {
-                if (result.NameService == services[i].NameService)
-                {
-                    services[i] = result;
+                case 0:
+                    services = result.ReturnServices.ToList();
                     break;
-                }
+                case 1:
+                    JsRuntime.InvokeVoidAsync("alert", result.ReturtAnswer);
+                    break;
+                case 2:
+                    for (int i = 0; i < services.Count; i++)
+                    {
+                        if (result.ReturnService.NameService == services[i].NameService)
+                        {
+                            services[i] = result.ReturnService;
+                            break;
+                        }
+                    }
+                    break;
             }
             StateHasChanged();
         });
 
         await hubConnection.StartAsync();
 
-        await hubConnection.SendAsync("GetServices");
+        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 5, Args = "1" });
     }
 
     async Task WorkService(int input, string serviceName) =>
-        await hubConnection.SendAsync("WorkWithService", input, serviceName);
+        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 2, TypeAction = input, Args = serviceName });
 
     public async ValueTask DisposeAsync()
     {

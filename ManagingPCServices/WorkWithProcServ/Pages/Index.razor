@@ -53,44 +53,45 @@
             .WithUrl(NavigationManager.ToAbsoluteUri("/servicehub"))
             .Build();
 
-        hubConnection.On<NetworkCardModel[]>("ReciveArrayData", (cards) =>
+        hubConnection.On<ReceiveCommandPackage>("Result", (result) =>
         {
-            this.networkCards = cards.ToList();
-            StateHasChanged();
-        });
-
-        hubConnection.On<string>("ReceiveResult", (result) =>
-             JsRuntime.InvokeVoidAsync("alert", result)
-        );
-
-        hubConnection.On<NetworkCardModel>("ReceiveChangeStatus", (result) =>
-        {
-            for (int i = 0; i < networkCards.Count; i++)
+            switch (result.TypeCommand)
             {
-                if (result.Name == networkCards[i].Name)
-                {
-                    networkCards[i] = result;
+                case 0:
+                    networkCards = result.ReturnNetworkCards.ToList();
                     break;
-                }
+                case 1:
+                    JsRuntime.InvokeVoidAsync("alert", result.ReturtAnswer);
+                    break;
+                case 2:
+                    for (int i = 0; i < networkCards.Count; i++)
+                    {
+                        if (result.ReturnNetworkCard.Name == networkCards[i].Name)
+                        {
+                            networkCards[i] = result.ReturnNetworkCard;
+                            break;
+                        }
+                    }
+                    break;
             }
             StateHasChanged();
         });
 
         await hubConnection.StartAsync();
 
-        await hubConnection.SendAsync("GetNetworkCards");
+        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 5, Args = "0" });
     }
 
 
     async Task Off() =>
-        await hubConnection.SendAsync("WorkWithNetworkCard", 0, "");
+        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 0, TypeAction = 0, Args = "" });
 
     async Task On() =>
-        await hubConnection.SendAsync("WorkWithNetworkCard", 1, "");
+        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 0, TypeAction = 1, Args = "" });
 
-    async Task WorkCard(int input, string name = "") =>    
-        await hubConnection.SendAsync("WorkWithNetworkCard", input, name);
-    
+    async Task WorkCard(int input, string name) =>
+        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 0, TypeAction = input, Args = name });
+
 
     public bool IsConnected =>
         hubConnection.State == HubConnectionState.Connected;

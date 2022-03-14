@@ -9,7 +9,7 @@ namespace ManagingPCServices.Services
 
     class WorkerNetworkCard : INetworkCard
     {
-        public List<NetworkCardModel> GetAllNetworkCards()
+        public NetworkCardModel[] GetAllNetworkCards()
         {
             ManagementObjectSearcher searchProcedure1 = new ManagementObjectSearcher("SELECT Name, Status FROM Win32_PnpEntity WHERE ClassGuid = \"{4d36e972-e325-11ce-bfc1-08002be10318}\"");
             List<NetworkCardModel> cards = new List<NetworkCardModel>();
@@ -32,7 +32,7 @@ namespace ManagingPCServices.Services
                 cards.Add(newCards);
             }
 
-            return cards;
+            return cards.ToArray();
         }
 
         public NetworkCardModel GetNetworkCard(string name)

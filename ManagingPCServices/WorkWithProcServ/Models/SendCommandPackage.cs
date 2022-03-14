@@ -1,6 +1,6 @@
 ﻿namespace ManagingPCServices.Models
 {
-    public class CommandPackage
+    public class SendCommandPackage
     {
         public int TypeCommand { get; set; }
 

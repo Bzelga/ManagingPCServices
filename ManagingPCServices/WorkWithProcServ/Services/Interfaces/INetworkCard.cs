@@ -5,7 +5,7 @@ namespace ManagingPCServices.Services
 {
     public interface INetworkCard
     {
-        List<NetworkCardModel> GetAllNetworkCards();
+        NetworkCardModel[] GetAllNetworkCards();
         string DisableAllNetwork();
         string EnableAllNetwork();
         string DisableNetworkByName(string name);
