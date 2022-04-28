@@ -1,0 +1,39 @@
+﻿@page "/checkRules"
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+@implements IAsyncDisposable
+
+<button @onclick="ClickRule1">Аргументы для правила 1</button>
+<button @onclick="ClickRule2">Аргументы для правила 2</button>
+<button @onclick="ClickRule3">Просто без правил</button>
+
+@code {
+    private HubConnection hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavigationManager.ToAbsoluteUri("/servicehub"))
+            .Build();
+
+        await hubConnection.StartAsync();
+    }
+
+    async Task ClickRule1() =>
+        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 6, ArgsForRule = new string[] { "10", "20" } });
+
+    async Task ClickRule2() =>
+        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 6, ArgsForRule = new string[] { "30", "40", "50" } });
+
+    async Task ClickRule3() =>
+        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 6, ArgsForRule = new string[] { "10", "20", "30" } });
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+}

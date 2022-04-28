@@ -87,7 +87,7 @@
 
         await hubConnection.StartAsync();
 
-        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 5, Args = "2" });
+        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 5, ArgsForAction = "2" });
     }
 
     async Task WorkProcess(int input, int id)
@@ -96,7 +96,7 @@
         {
             delElem = true;
         }
-        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 3, TypeAction = input, Args = Convert.ToString(id) });
+        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 3, TypeAction = input, ArgsForAction = Convert.ToString(id) });
     }
 
 

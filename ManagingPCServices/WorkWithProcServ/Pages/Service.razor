@@ -74,11 +74,11 @@
 
         await hubConnection.StartAsync();
 
-        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 5, Args = "1" });
+        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 5, ArgsForAction = "1" });
     }
 
     async Task WorkService(int input, string serviceName) =>
-        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 2, TypeAction = input, Args = serviceName });
+        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 2, TypeAction = input, ArgsForAction = serviceName });
 
     public async ValueTask DisposeAsync()
     {

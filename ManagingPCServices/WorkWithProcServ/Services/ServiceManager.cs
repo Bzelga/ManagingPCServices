@@ -2,9 +2,17 @@
 using ManagingPCServices.Models;
 using ManagingPCServices.Services.Interfaces;
 using Microsoft.AspNetCore.SignalR;
+using System;
+using System.Collections.Generic;
 
 namespace ManagingPCServices.Services
 {
+    public class Rules
+    {
+        public int Action { get; set; }
+        public string[] Args { get; set; }
+    }
+
     public class ServiceManager : IServiceManager
     {
         internal readonly WorkerNetworkCard _network;
@@ -14,6 +22,8 @@ namespace ManagingPCServices.Services
         internal readonly WorkerCommandLine _commandLine;
         internal readonly IHubContext<ServiceHub, IServiceHub> _hub;
 
+        private readonly Rules[] rules;
+
         public ServiceManager(IHubContext<ServiceHub, IServiceHub> hub)
         {
             _network = new WorkerNetworkCard();
@@ -22,6 +32,20 @@ namespace ManagingPCServices.Services
             _service = new WorkerService();
             _commandLine = new WorkerCommandLine();
             _hub = hub;
+
+            rules = new Rules[]
+            {
+                new Rules
+                {
+                    Action = 1,
+                    Args = new string[] {"10", "20"}
+                },
+               new Rules
+                {
+                    Action = 2,
+                    Args = new string[] { "30", "40", "50" }
+                }
+            };
         }
 
         public void WorkNetworkCard(int input, string name)
@@ -117,6 +141,41 @@ namespace ManagingPCServices.Services
         public void WorkRegystryProgramm(string nameProgramm)
         {
             _hub.Clients.All.Result(new ReceiveCommandPackage { TypeCommand = 1, ReturtAnswer = _registry.RemoveFromRegistry(nameProgramm) });
+        }
+
+        public void EnforceRule(string[] args)
+        {
+            var action = checkArgs(args);
+
+            switch (action)
+            {
+                case 1:
+                    _network.DisableAllNetwork();
+                    break;
+                case 2:
+                    _network.EnableAllNetwork();
+                    break;
+            }
+
+        }
+
+        private int checkArgs(string[] args)
+        {
+            foreach (var rule in rules)
+            {
+                if (rule.Args.Length == args.Length)
+                {
+                    for (int i = 0; i < args.Length; i++)
+                    {
+                        if (args[i] != rule.Args[i])
+                            break;
+                        if (i == args.Length - 1)
+                            return rule.Action;
+                    }
+                }
+            }
+
+            return 0;
         }
 
         public async void GetAllNetworkCards()

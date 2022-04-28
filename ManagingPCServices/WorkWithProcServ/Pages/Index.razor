@@ -79,18 +79,18 @@
 
         await hubConnection.StartAsync();
 
-        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 5, Args = "0" });
+        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 5, ArgsForAction = "0" });
     }
 
 
     async Task Off() =>
-        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 0, TypeAction = 0, Args = "" });
+        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 0, TypeAction = 0, ArgsForAction = "" });
 
     async Task On() =>
-        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 0, TypeAction = 1, Args = "" });
+        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 0, TypeAction = 1, ArgsForAction = "" });
 
     async Task WorkCard(int input, string name) =>
-        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 0, TypeAction = input, Args = name });
+        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 0, TypeAction = input, ArgsForAction = name });
 
 
     public bool IsConnected =>

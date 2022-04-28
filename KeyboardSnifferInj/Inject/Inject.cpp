@@ -1,54 +1,90 @@
-﻿#include <iostream>
-#include <json.hpp>
-#include <fstream>
-#include "Injector.h"
-#include "Cryptographer.h"
-#include<filesystem>
+﻿#if defined(_WIN32)
+#define PathToLibrary "C:\\Users\\Bzelga\\Desktop\\KeyboardSnifferInj\\ClassLibrary1\\bin\\Release\\net5.0\\win-x64\\ClassLibrary1.dll"
+#elif defined(__APPLE__)
+#define PathToLibrary "./bin/Debug/net6.0/osx-x64/native/NativeLibrary.dylib"
+#else
+#define PathToLibrary "./bin/Debug/net6.0/linux-x64/native/NativeLibrary.so"
+#endif
 
-using namespace std;
-using json = nlohmann::json;
+#ifdef _WIN32
+#include "windows.h"
+#define symLoad GetProcAddress
+#else
+#include "dlfcn.h"
+#include <unistd.h>
+#define symLoad dlsym
+#endif
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <io.h>
+
+#ifndef F_OK
+#define F_OK    0
+#endif
+
+int callSumFunc(char* path, char* funcName, int a, int b);
+char* callSumStringFunc(char* path, char* funcName, char* a, char* b);
 
 int main()
 {
-	setlocale(LC_ALL, ".1251");
-	ifstream file("C:\\Users\\Bzelga\\Desktop\\ManagingPCServices\\KeyboardSnifferInj\\outputFolder\\param.json");//при сборке из визуалки указывать полный путь 
+    // Check if the library file exists
+    if (_access(PathToLibrary, F_OK) == -1)
+    {
+        puts("Couldn't find library at the specified path");
+        return 0;
+    }
 
-	char* writable = new char[0];
-	json j;
-	file >> j;
+    // Sum two integers
+    int sum = callSumFunc((char*)PathToLibrary, (char*)"add", 2, 8);
+    printf("The sum is %d \n", sum);
 
-	string pathFile = j["pathProgramm"].get<string>();
-	if (pathFile != "")
-	{
-		writable = (char*)malloc((pathFile.size()+1)*sizeof(char*));
-		//writable = new char[pathFile.size() + 1];
-		copy(pathFile.begin(), pathFile.end(), writable);
-		writable[pathFile.size()] = '\0';
-	}
+    // Concatenate two strings
+    char* sumstring = callSumStringFunc((char*)PathToLibrary, (char*)"sumstring", (char*)"ok", (char*)"ko");
+    printf("The concatenated string is %s \n", sumstring);
 
-	switch (j["tpyeProgramm"].get<int>())
-	{
-	case 1:
-		inject_DLL("C:\\Users\\Bzelga\\Desktop\\ManagingPCServices\\KeyboardSnifferInj\\outputFolder\\KeyboardSniffer.dll", j["PID"].get<int>());
-		break;
-	case 2:
-
-		while (true)
-		{
-			if (filesystem::is_directory(writable))
-			{
-				EncryptionFiles(writable);
-				DecryptionFiles(writable);
-			}
-			else
-			{
-				EncryptionFile(writable);
-				DecryptionFile(writable);
-			}
-		}
-
-		delete[] writable;
-		break;
-	}
+    // Free string
+    free(sumstring);
 }
 
+int callSumFunc(char* path, char* funcName, int firstInt, int secondInt)
+{
+    // Call sum function defined in C# shared library
+#ifdef _WIN32
+    HINSTANCE handle = LoadLibraryA(path);
+#else
+    void* handle = dlopen(path, RTLD_LAZY);
+#endif
+
+    typedef int(*myFunc)(int, int);
+    myFunc MyImport = (myFunc)symLoad(handle, funcName);
+
+    int result = MyImport(firstInt, secondInt);
+
+    // CoreRT libraries do not support unloading
+    // See https://github.com/dotnet/corert/issues/7887
+    return result;
+}
+
+char* callSumStringFunc(char* path, char* funcName, char* firstString, char* secondString)
+{
+    // Library loading
+#ifdef _WIN32
+    HINSTANCE handle = LoadLibraryA(path);
+#else
+    void* handle = dlopen(path, RTLD_LAZY);
+#endif
+
+    // Declare a typedef
+    typedef char* (*myFunc)(char*, char*);
+
+    // Import Symbol named funcName
+    myFunc MyImport = (myFunc)symLoad(handle, funcName);
+
+    // The C# function will return a pointer
+    char* result = MyImport(firstString, secondString);
+
+    // CoreRT libraries do not support unloading
+    // See https://github.com/dotnet/corert/issues/7887
+    return result;
+}

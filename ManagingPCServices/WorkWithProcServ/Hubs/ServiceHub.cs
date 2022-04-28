@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using ManagingPCServices.Services;
 using ManagingPCServices.Models;
 using System;
+using ManagingPCServices.Enums;
 
 namespace ManagingPCServices.Hubs
 {
@@ -17,39 +18,42 @@ namespace ManagingPCServices.Hubs
 
         public async Task Do(SendCommandPackage package)
         {
-            switch (package.TypeCommand)
+            switch ((TypeCommand)package.TypeCommand)
             {
-                case 0:
-                    _serviceManager.WorkNetworkCard(package.TypeAction, package.Args);
+                case TypeCommand.NetworkCard:
+                    _serviceManager.WorkNetworkCard(package.TypeAction, package.ArgsForAction);
                     break;
-                case 1:
-                    _serviceManager.WorkCommandLine(package.TypeAction, package.Args);
+                case TypeCommand.CommandLine:
+                    _serviceManager.WorkCommandLine(package.TypeAction, package.ArgsForAction);
                     break;
-                case 2:
-                    _serviceManager.WorkService(package.TypeAction, package.Args);
+                case TypeCommand.Service:
+                    _serviceManager.WorkService(package.TypeAction, package.ArgsForAction);
                     break;
-                case 3:
-                    _serviceManager.WorkProcess(package.TypeAction, Convert.ToInt32(package.Args));
+                case TypeCommand.Process:
+                    _serviceManager.WorkProcess(package.TypeAction, Convert.ToInt32(package.ArgsForAction));
                     break;
-                case 4:
-                    _serviceManager.WorkRegystryProgramm(package.Args);
+                case TypeCommand.RegystryProgramm:
+                    _serviceManager.WorkRegystryProgramm(package.ArgsForAction);
                     break;
-                case 5:
-                    switch(Convert.ToInt32(package.Args))
+                case TypeCommand.GetData:
+                    switch((TypeGetData)Convert.ToInt32(package.ArgsForAction))
                     {
-                        case 0:
+                        case TypeGetData.NetworkCards:
                             _serviceManager.GetAllNetworkCards();
                             break;
-                        case 1:
+                        case TypeGetData.Service:
                             _serviceManager.GetAllService();
                             break;
-                        case 2:
+                        case TypeGetData.Processes:
                             _serviceManager.GetAllProcess();
                             break;
-                        case 3:
+                        case TypeGetData.ProgrammAutorun:
                             _serviceManager.GetAllProgrammInAutorun();
                             break;
                     }
+                    break;
+                case TypeCommand.ArgsForRules:
+                    _serviceManager.EnforceRule(package.ArgsForRule);
                     break;
             }
         }

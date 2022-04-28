@@ -34,7 +34,7 @@
     {
         result = "";
         //await hubConnection.SendAsync("WorkCommandLine", input, command);
-        await hubConnection.SendAsync("Do", new SendCommandPackage{TypeCommand = 1, TypeAction = input, Args = command});
+        await hubConnection.SendAsync("Do", new SendCommandPackage{TypeCommand = 1, TypeAction = input, ArgsForAction = command});
         StateHasChanged();
     }
 
