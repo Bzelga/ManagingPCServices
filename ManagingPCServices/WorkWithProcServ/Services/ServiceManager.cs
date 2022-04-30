@@ -7,11 +7,6 @@ using System.Collections.Generic;
 
 namespace ManagingPCServices.Services
 {
-    public class Rules
-    {
-        public int Action { get; set; }
-        public string[] Args { get; set; }
-    }
 
     public class ServiceManager : IServiceManager
     {
@@ -22,7 +17,8 @@ namespace ManagingPCServices.Services
         internal readonly WorkerCommandLine _commandLine;
         internal readonly IHubContext<ServiceHub, IServiceHub> _hub;
 
-        private readonly Rules[] rules;
+        private Predicate<string[]> _rule1 = (string[] args) => args[0] == "10" && args[1] == "20";
+        private Predicate<string[]> _rule2 = (string[] args) => args[0] == "30" && args[1] == "40" && args[2] == "50";
 
         public ServiceManager(IHubContext<ServiceHub, IServiceHub> hub)
         {
@@ -32,20 +28,6 @@ namespace ManagingPCServices.Services
             _service = new WorkerService();
             _commandLine = new WorkerCommandLine();
             _hub = hub;
-
-            rules = new Rules[]
-            {
-                new Rules
-                {
-                    Action = 1,
-                    Args = new string[] {"10", "20"}
-                },
-               new Rules
-                {
-                    Action = 2,
-                    Args = new string[] { "30", "40", "50" }
-                }
-            };
         }
 
         public void WorkNetworkCard(int input, string name)
@@ -145,37 +127,10 @@ namespace ManagingPCServices.Services
 
         public void EnforceRule(string[] args)
         {
-            var action = checkArgs(args);
-
-            switch (action)
-            {
-                case 1:
-                    _network.DisableAllNetwork();
-                    break;
-                case 2:
-                    _network.EnableAllNetwork();
-                    break;
-            }
-
-        }
-
-        private int checkArgs(string[] args)
-        {
-            foreach (var rule in rules)
-            {
-                if (rule.Args.Length == args.Length)
-                {
-                    for (int i = 0; i < args.Length; i++)
-                    {
-                        if (args[i] != rule.Args[i])
-                            break;
-                        if (i == args.Length - 1)
-                            return rule.Action;
-                    }
-                }
-            }
-
-            return 0;
+            if(_rule1(args))
+                _network.DisableAllNetwork();
+            if (_rule2(args))
+                _network.EnableAllNetwork();
         }
 
         public async void GetAllNetworkCards()
