@@ -1,4 +1,4 @@
-﻿namespace ManagingPCServices.Services
+﻿namespace TestClient.Services.Interfaces
 {
     public interface IRegistry
     {

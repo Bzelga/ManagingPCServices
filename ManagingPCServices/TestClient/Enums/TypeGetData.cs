@@ -1,4 +1,4 @@
-﻿namespace ManagingPCServices.Enums
+﻿namespace TestClient.Enums
 {
     public enum TypeGetData
     {

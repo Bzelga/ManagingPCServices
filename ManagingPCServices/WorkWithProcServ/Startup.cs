@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.Linq;
 using ManagingPCServices.Hubs;
-using ManagingPCServices.Services;
 
 namespace ManagingPCServices
 {
@@ -23,7 +22,6 @@ namespace ManagingPCServices
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
-            services.AddSingleton<ServiceManager>();
             services.AddResponseCompression(opts =>
             {
                 opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
@@ -53,8 +51,8 @@ namespace ManagingPCServices
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapBlazorHub();
-                endpoints.MapHub<ServiceHub>("/servicehub");
                 endpoints.MapFallbackToPage("/_Host");
+                endpoints.MapHub<ServiceHub>("/servicehub");
             });
         }
     }

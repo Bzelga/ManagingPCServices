@@ -1,8 +1,8 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
+using TestClient.Services.Interfaces;
 
-namespace ManagingPCServices.Services
+namespace TestClient.Services
 {
     public class WorkerCommandLine : ICommandLine
     {

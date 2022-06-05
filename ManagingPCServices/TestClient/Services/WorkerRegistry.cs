@@ -1,7 +1,8 @@
 ﻿using Microsoft.Win32;
 using System;
+using TestClient.Services.Interfaces;
 
-namespace ManagingPCServices.Services
+namespace TestClient.Services
 {
     class WorkerRegistry : IRegistry
     {

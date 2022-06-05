@@ -1,4 +1,4 @@
-﻿namespace ManagingPCServices.Services.Interfaces
+﻿namespace TestClient.Services.Interfaces
 {
     public interface IServiceManager
     {

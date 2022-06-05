@@ -1,6 +1,6 @@
-﻿using ManagingPCServices.Models;
+﻿using TestClient.Models;
 
-namespace ManagingPCServices.Services
+namespace TestClient.Services.Interfaces
 {
     public interface IProcess
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace ManagingPCServices.Services
+namespace TestClient.Services
 {
     public class SuspendResumeProcessKernel32
     {

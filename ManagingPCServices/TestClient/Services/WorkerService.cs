@@ -1,8 +1,9 @@
 ﻿using System;
 using System.ServiceProcess;
-using ManagingPCServices.Models;
+using TestClient.Models;
+using TestClient.Services.Interfaces;
 
-namespace ManagingPCServices.Services
+namespace TestClient.Services
 {
     class WorkerService : IService
     {

@@ -51,7 +51,7 @@
 
         await hubConnection.StartAsync();
 
-        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 5, ArgsForAction = "3" });
+        await hubConnection.SendAsync("GetUsersCommand", new SendCommandPackage { TypeCommand = 5, ArgsForAction = "3" });
     }
 
     async Task WorkRegystry(string name)
@@ -64,7 +64,7 @@
             }
         }
 
-        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 4, ArgsForAction = name });
+        await hubConnection.SendAsync("GetUsersCommand", new SendCommandPackage { TypeCommand = 4, ArgsForAction = name });
         StateHasChanged();
     }
 

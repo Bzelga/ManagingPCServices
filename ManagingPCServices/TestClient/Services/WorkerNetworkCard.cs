@@ -1,9 +1,10 @@
-﻿using ManagingPCServices.Models;
+﻿using TestClient.Models;
 using System;
 using System.Collections.Generic;
 using System.Management;
+using TestClient.Services.Interfaces;
 
-namespace ManagingPCServices.Services
+namespace TestClient.Services
 {
     //поменять сбор всех сетевых карт на  ManagementObjectSearcher searchProcedure = new ManagementObjectSearcher(string.Format("SELECT * FROM Win32_PnpEntity WHERE Name = \"{0}\"", name)); только на GUID
 

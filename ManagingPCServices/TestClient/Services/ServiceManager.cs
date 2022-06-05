@@ -1,9 +1,7 @@
-﻿using ManagingPCServices.Hubs;
-using ManagingPCServices.Models;
-using ManagingPCServices.Services.Interfaces;
-using Microsoft.AspNetCore.SignalR;
-using System;
-using System.Collections.Generic;
+﻿using Microsoft.AspNetCore.SignalR.Client;
+using TestClient.Models;
+using TestClient.Services;
+using TestClient.Services.Interfaces;
 
 namespace ManagingPCServices.Services
 {
@@ -15,12 +13,9 @@ namespace ManagingPCServices.Services
         internal readonly WorkerRegistry _registry;
         internal readonly WorkerService _service;
         internal readonly WorkerCommandLine _commandLine;
-        internal readonly IHubContext<ServiceHub, IServiceHub> _hub;
+        internal readonly HubConnection _hub;
 
-        private Predicate<string[]> _rule1 = (string[] args) => args[0] == "10" && args[1] == "20";
-        private Predicate<string[]> _rule2 = (string[] args) => args[0] == "30" && args[1] == "40" && args[2] == "50";
-
-        public ServiceManager(IHubContext<ServiceHub, IServiceHub> hub)
+        public ServiceManager(HubConnection hub)
         {
             _network = new WorkerNetworkCard();
             _process = new WorkerProcess();
@@ -50,10 +45,11 @@ namespace ManagingPCServices.Services
                     break;
             }
 
-            _hub.Clients.All.Result(new ReceiveCommandPackage { TypeCommand = 1, ReturtAnswer = answer });
+            _hub.InvokeCoreAsync("GetResponseClient", args: new[] { new ReceiveCommandPackage { TypeCommand = 1, ReturtAnswer = answer } });
 
             if (input == 2 || input == 3)
-                _hub.Clients.All.Result(new ReceiveCommandPackage { TypeCommand = 2, ReturnNetworkCard = _network.GetNetworkCard(name) });
+                _hub.InvokeCoreAsync("GetResponseClient", args: new[] { new ReceiveCommandPackage { TypeCommand = 2, ReturnNetworkCard = _network.GetNetworkCard(name) } });
+
         }
 
         public void WorkCommandLine(int input, string command)
@@ -70,7 +66,7 @@ namespace ManagingPCServices.Services
                     break;
             }
 
-            _hub.Clients.All.Result(answer);
+            _hub.InvokeCoreAsync("GetResponseClient", args: new[] { answer });
         }
 
         public void WorkService(int input, string nameService)
@@ -93,9 +89,9 @@ namespace ManagingPCServices.Services
                     break;
             }
 
-            _hub.Clients.All.Result(new ReceiveCommandPackage { TypeCommand = 1, ReturtAnswer = answer });
+            _hub.InvokeCoreAsync("GetResponseClient", args: new[] { new ReceiveCommandPackage { TypeCommand = 1, ReturtAnswer = answer } });
 
-            _hub.Clients.All.Result(new ReceiveCommandPackage { TypeCommand = 2, ReturnService = _service.GetService(nameService) });
+            _hub.InvokeCoreAsync("GetResponseClient", args: new[] { new ReceiveCommandPackage { TypeCommand = 2, ReturnService = _service.GetService(nameService) } });
         }
 
         public void WorkProcess(int input, int id)
@@ -115,42 +111,34 @@ namespace ManagingPCServices.Services
                     break;
             }
 
-            _hub.Clients.All.Result(new ReceiveCommandPackage { TypeCommand = 1, ReturtAnswer = answer });
+            _hub.InvokeCoreAsync("GetResponseClient", args: new[] { new ReceiveCommandPackage { TypeCommand = 1, ReturtAnswer = answer } });
 
-            _hub.Clients.All.Result(new ReceiveCommandPackage { TypeCommand = 2, ReturnProces = _process.GetProcess(id) });
+            _hub.InvokeCoreAsync("GetResponseClient", args: new[] { new ReceiveCommandPackage { TypeCommand = 2, ReturnProces = _process.GetProcess(id) } });
         }
 
         public void WorkRegystryProgramm(string nameProgramm)
         {
-            _hub.Clients.All.Result(new ReceiveCommandPackage { TypeCommand = 1, ReturtAnswer = _registry.RemoveFromRegistry(nameProgramm) });
-        }
-
-        public void EnforceRule(string[] args)
-        {
-            if(_rule1(args))
-                _network.DisableAllNetwork();
-            if (_rule2(args))
-                _network.EnableAllNetwork();
+            _hub.InvokeCoreAsync("GetResponseClient", args: new[] { new ReceiveCommandPackage { TypeCommand = 1, ReturtAnswer = _registry.RemoveFromRegistry(nameProgramm) } });
         }
 
         public async void GetAllNetworkCards()
         {
-            await _hub.Clients.All.Result(new ReceiveCommandPackage { TypeCommand = 0, ReturnNetworkCards = _network.GetAllNetworkCards() });
+            await _hub.InvokeCoreAsync("GetResponseClient", args: new[] { new ReceiveCommandPackage { TypeCommand = 0, ReturnNetworkCards = _network.GetAllNetworkCards() } });
         }
 
         public async void GetAllService()
         {
-            await _hub.Clients.All.Result(new ReceiveCommandPackage { TypeCommand = 0, ReturnServices = _service.GetAllServices() });
+            await _hub.InvokeCoreAsync("GetResponseClient", args: new[] { new ReceiveCommandPackage { TypeCommand = 0, ReturnServices = _service.GetAllServices() } });
         }
 
         public async void GetAllProcess()
         {
-            await _hub.Clients.All.Result(new ReceiveCommandPackage { TypeCommand = 0, ReturnProcess = _process.GetAllProcesses() });
+            await _hub.InvokeCoreAsync("GetResponseClient", args: new[] { new ReceiveCommandPackage { TypeCommand = 0, ReturnProcess = _process.GetAllProcesses() } });
         }
 
         public async void GetAllProgrammInAutorun()
         {
-            await _hub.Clients.All.Result(new ReceiveCommandPackage { TypeCommand = 0, ReturnProgrammInRegistry = _registry.GetRegistryKeyNames() });
+            await _hub.InvokeCoreAsync("GetResponseClient", args: new[] { new ReceiveCommandPackage { TypeCommand = 0, ReturnProgrammInRegistry = _registry.GetRegistryKeyNames() } });
         }
     }
 }
