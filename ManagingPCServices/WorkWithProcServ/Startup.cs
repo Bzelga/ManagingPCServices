@@ -22,6 +22,7 @@ namespace ManagingPCServices
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
+            services.AddSingleton<RuleChecker>();
             services.AddResponseCompression(opts =>
             {
                 opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(

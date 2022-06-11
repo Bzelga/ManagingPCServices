@@ -6,14 +6,23 @@ namespace ManagingPCServices.Hubs
 {
     public class ServiceHub : Hub<IServiceHub>
     {
+        RuleChecker _ruleChecker;
+        public ServiceHub(RuleChecker ruleChecker)
+        {
+            _ruleChecker = ruleChecker;
+        }
+
         public async Task GetResponseClient(ReceiveCommandPackage package)
         {
-            this.Clients.All.Result(package);
+            if (package.TypeCommand == 3)
+                await Clients.All.Result(_ruleChecker.CheckRule(package.ArgsComputerSystem));
+            else
+                await Clients.All.Result(package);
         }
 
         public async Task GetUsersCommand(SendCommandPackage package)
         {
-            this.Clients.All.Do(package);
+            await Clients.All.Do(package);
 
         }
     }

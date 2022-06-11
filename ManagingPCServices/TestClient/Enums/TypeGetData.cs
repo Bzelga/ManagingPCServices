@@ -8,6 +8,8 @@
         
         Processes = 2,
 
-        ProgrammAutorun = 3
+        ProgrammAutorun = 3,
+
+        ParametersCompterSystem = 4
     }
 }

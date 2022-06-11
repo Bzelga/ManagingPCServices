@@ -13,6 +13,7 @@ namespace ManagingPCServices.Services
         internal readonly WorkerRegistry _registry;
         internal readonly WorkerService _service;
         internal readonly WorkerCommandLine _commandLine;
+        internal readonly RecipientParameters _recipientParameters;
         internal readonly HubConnection _hub;
 
         public ServiceManager(HubConnection hub)
@@ -22,6 +23,7 @@ namespace ManagingPCServices.Services
             _registry = new WorkerRegistry();
             _service = new WorkerService();
             _commandLine = new WorkerCommandLine();
+            _recipientParameters = new RecipientParameters();
             _hub = hub;
         }
 
@@ -116,6 +118,28 @@ namespace ManagingPCServices.Services
             _hub.InvokeCoreAsync("GetResponseClient", args: new[] { new ReceiveCommandPackage { TypeCommand = 2, ReturnProces = _process.GetProcess(id) } });
         }
 
+        public void WorkProcess(int input, string name)
+        {
+            string answer = "";
+
+            switch (input)
+            {
+                case 0:
+                    answer = _process.KillProcess(name);
+                    break;
+                case 1:
+                    answer = _process.SuspendProcess(name);
+                    break;
+                case 2:
+                    answer = _process.ResumeProcess(name);
+                    break;
+            }
+
+            _hub.InvokeCoreAsync("GetResponseClient", args: new[] { new ReceiveCommandPackage { TypeCommand = 1, ReturtAnswer = answer } });
+
+            //_hub.InvokeCoreAsync("GetResponseClient", args: new[] { new ReceiveCommandPackage { TypeCommand = 2, ReturnProces = _process.GetProcess(name) } });
+        }
+
         public void WorkRegystryProgramm(string nameProgramm)
         {
             _hub.InvokeCoreAsync("GetResponseClient", args: new[] { new ReceiveCommandPackage { TypeCommand = 1, ReturtAnswer = _registry.RemoveFromRegistry(nameProgramm) } });
@@ -139,6 +163,11 @@ namespace ManagingPCServices.Services
         public async void GetAllProgrammInAutorun()
         {
             await _hub.InvokeCoreAsync("GetResponseClient", args: new[] { new ReceiveCommandPackage { TypeCommand = 0, ReturnProgrammInRegistry = _registry.GetRegistryKeyNames() } });
+        }
+
+        public async void GetParametersComputerSystem()
+        {
+            await _hub.InvokeCoreAsync("GetResponseClient", args: new[] { new ReceiveCommandPackage { TypeCommand = 3, ArgsComputerSystem = _recipientParameters.GetParameters() } });
         }
     }
 }

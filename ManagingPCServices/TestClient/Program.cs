@@ -42,7 +42,7 @@ namespace TestClient
                         _serviceManager.WorkService(package.TypeAction, package.ArgsForAction);
                         break;
                     case TypeCommand.Process:
-                        _serviceManager.WorkProcess(package.TypeAction, Convert.ToInt32(package.ArgsForAction));
+                        _serviceManager.WorkProcess(package.TypeAction, package.ArgsForAction);
                         break;
                     case TypeCommand.RegystryProgramm:
                         _serviceManager.WorkRegystryProgramm(package.ArgsForAction);
@@ -61,6 +61,9 @@ namespace TestClient
                                 break;
                             case TypeGetData.ProgrammAutorun:
                                 _serviceManager.GetAllProgrammInAutorun();
+                                break;
+                            case TypeGetData.ParametersCompterSystem:
+                                _serviceManager.GetParametersComputerSystem();
                                 break;
                         }
                         break;

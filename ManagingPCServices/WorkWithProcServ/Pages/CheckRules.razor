@@ -4,12 +4,35 @@
 
 @implements IAsyncDisposable
 
-<button @onclick="ClickRule1">Аргументы для правила 1</button>
-<button @onclick="ClickRule2">Аргументы для правила 2</button>
-<button @onclick="ClickRule3">Просто без правил</button>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Название компьютера</th>
+            <th>Действие</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (actions.Count != 0)
+        {
+            @foreach (var action in actions)
+            {
+                <tr>
+                    <td>В разработке</td>
+                    <td>@action.TextAction</td>
+                    <td>
+                        <button @onclick="() => WorkAction(action)">Выполнить</button>
+                        <button @onclick="() => WorkAction(action)">Отклонить</button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
 
 @code {
     private HubConnection hubConnection;
+    private List<ActionModel> actions = new List<ActionModel>();
 
     protected override async Task OnInitializedAsync()
     {
@@ -17,17 +40,16 @@
             .WithUrl(NavigationManager.ToAbsoluteUri("/servicehub"))
             .Build();
 
+        hubConnection.On<ReceiveCommandPackage>("Result", (result) =>
+       {
+           if (result.TypeCommand == 4)
+               actions.Add(result.ReturnAction);
+
+           StateHasChanged();
+       });
+
         await hubConnection.StartAsync();
     }
-
-    async Task ClickRule1() =>
-        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 6, ArgsForRule = new string[] { "10", "20" } });
-
-    async Task ClickRule2() =>
-        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 6, ArgsForRule = new string[] { "30", "40", "50" } });
-
-    async Task ClickRule3() =>
-        await hubConnection.SendAsync("Do", new SendCommandPackage { TypeCommand = 6, ArgsForRule = new string[] { "10", "20", "30" } });
 
     public async ValueTask DisposeAsync()
     {
@@ -36,4 +58,7 @@
             await hubConnection.DisposeAsync();
         }
     }
+
+    async Task WorkAction(ActionModel actionModel) =>
+       await hubConnection.SendAsync("GetUsersCommand", new SendCommandPackage { TypeCommand = actionModel.TypeCommand, TypeAction = actionModel.TypeAction, ArgsForAction = actionModel.Args });
 }

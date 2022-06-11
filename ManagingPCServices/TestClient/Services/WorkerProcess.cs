@@ -14,7 +14,7 @@ namespace TestClient.Services
             int countProcesses = processes.Length;
             ProcessIdStatusModel[] processIdStatusModels = new ProcessIdStatusModel[countProcesses];
 
-            for(int i = 0; i < countProcesses; i++)
+            for (int i = 0; i < countProcesses; i++)
             {
                 processIdStatusModels[i] = new ProcessIdStatusModel
                 {
@@ -38,13 +38,21 @@ namespace TestClient.Services
             };
         }
 
-        public void KillProcess(string name)
+        public string KillProcess(string name)
         {
             Process[] processes = Process.GetProcessesByName(name);
 
-            foreach (var process in processes)
+            try
             {
-                process.Kill();
+                foreach (var process in processes)
+                {
+                    process.Kill();
+                }
+                return "Успешно";
+            }
+            catch (Exception ex)
+            {
+                return "Не удалось убить процесс " + ex.Message;
             }
         }
 
@@ -56,31 +64,38 @@ namespace TestClient.Services
                 process.Kill();
                 return "Успешно";
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return "Не удалось убить процесс " + ex.Message;
             }
         }
 
-        public void SuspendProcess(string name)
+        public string SuspendProcess(string name)
         {
             SuspendResumeProcessKernel32 SRPK32 = new SuspendResumeProcessKernel32();
             Process[] processes = Process.GetProcessesByName(name);
-
-            foreach (var process in processes)
+            try
             {
-                foreach (ProcessThread pT in process.Threads)
+                foreach (var process in processes)
                 {
-                    nint pOpenThread = SRPK32.OpenThread(SuspendResumeProcessKernel32.ThreadAccess.SUSPEND_RESUME, false, (uint)pT.Id);
-
-                    if (pOpenThread == 0)
+                    foreach (ProcessThread pT in process.Threads)
                     {
-                        continue;
-                    }
+                        nint pOpenThread = SRPK32.OpenThread(SuspendResumeProcessKernel32.ThreadAccess.SUSPEND_RESUME, false, (uint)pT.Id);
 
-                    SRPK32.SuspendThread(pOpenThread);
-                    SRPK32.CloseHandle(pOpenThread);
+                        if (pOpenThread == 0)
+                        {
+                            continue;
+                        }
+
+                        SRPK32.SuspendThread(pOpenThread);
+                        SRPK32.CloseHandle(pOpenThread);
+                    }
                 }
+                return "Успешно";
+            }
+            catch (Exception ex)
+            {
+                return "Не удалось остановить процесс " + ex.Message;
             }
         }
 
@@ -107,37 +122,44 @@ namespace TestClient.Services
 
                 return "Успешно";
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return "Не удалось остановить процесс " + ex.Message;
             }
-            
+
         }
 
-        public void ResumeProcess(string name)
+        public string ResumeProcess(string name)
         {
             SuspendResumeProcessKernel32 SRPK32 = new SuspendResumeProcessKernel32();
             Process[] processes = Process.GetProcessesByName(name);
-
-            foreach (var process in processes)
+            try
             {
-                foreach (ProcessThread pT in process.Threads)
+                foreach (var process in processes)
                 {
-                    nint pOpenThread = SRPK32.OpenThread(SuspendResumeProcessKernel32.ThreadAccess.SUSPEND_RESUME, false, (uint)pT.Id);
-
-                    if (pOpenThread == 0)
+                    foreach (ProcessThread pT in process.Threads)
                     {
-                        continue;
+                        nint pOpenThread = SRPK32.OpenThread(SuspendResumeProcessKernel32.ThreadAccess.SUSPEND_RESUME, false, (uint)pT.Id);
+
+                        if (pOpenThread == 0)
+                        {
+                            continue;
+                        }
+
+                        var suspendCount = 0;
+                        do
+                        {
+                            suspendCount = SRPK32.ResumeThread(pOpenThread);
+                        } while (suspendCount > 0);
+
+                        SRPK32.CloseHandle(pOpenThread);
                     }
-
-                    var suspendCount = 0;
-                    do
-                    {
-                        suspendCount = SRPK32.ResumeThread(pOpenThread);
-                    } while (suspendCount > 0);
-
-                    SRPK32.CloseHandle(pOpenThread);
                 }
+                return "Успешно";
+            }
+            catch (Exception ex)
+            {
+                return "Не удалось возабновить процесс " + ex.Message;
             }
         }
 
@@ -168,7 +190,7 @@ namespace TestClient.Services
 
                 return "Успешно";
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return "Не удалось возабновить процесс " + ex.Message;
             }

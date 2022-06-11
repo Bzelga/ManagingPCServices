@@ -19,5 +19,7 @@
         public ProcessIdStatusModel ReturnProces { get; set; }
 
         public ServiceAndStatusModel ReturnService { get; set; }
+
+        public string[] ArgsComputerSystem { get; set; }
     }
 }
